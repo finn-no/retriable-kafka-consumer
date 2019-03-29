@@ -6,6 +6,22 @@ The record will then be retried until it is successfully processed without excep
 
 # Usage
 
+## Requirements 
+
+* In your kafka-config, turn of auto-commit. 
+* You need to implement a `KafkaClientFactory`:
+
+      public interface KafkaClientFactory<K, V> {
+    
+            Consumer<K, V> consumer();
+    
+            Producer<K, V> producer();
+    
+            String groupId();
+      }
+
+    
+
 ## Minimal example
 
     pool = new ReliablePoolBuilder<>(eventClientFactory)
@@ -36,18 +52,20 @@ The record will then be retried until it is successfully processed without excep
 
 # Detailed description goes here
 
-This library is inspired by an article written by [Über Engeneering](https://eng.uber.com/reliable-reprocessing/), but takes a slightly different approach.
+This library is inspired by an article written by [Über Engineering](https://eng.uber.com/reliable-reprocessing/), but takes a slightly different approach.
 Instead of using _n_ retry-topics and a dead-letter-queue, we use 1 retry queue and timestamps in the record headers to check if a record is expired. 
 
-The retry-topic is TODODO
+The retry-topic will be named "retry-<groupid>-<original-topic>", and the pool will consume messages from this topic in the same way as the original topic. 
+Consumer-threads are made restartable, meaning if any of the threads die for some reason they can be restarted by the monitor. 
 
-* poolcount
-* retry-topics
-* commit
-* default values
-* inspiration, link to über article
-* restartable consumers
-* prometheus metrics, version export
-* headers for counting and timing (kafka 2.0?)
+Reprocessing is controlled by headers on the kafka-record to keep track of how many times a record has been processed and a timestamp for the initial retry-attempt. 
 
+## Metrics
 
+Metric counters are exposed via prometheus. 
+
+* expired_events
+* failed_events
+* processed_successfully_events
+
+These are all in the namespace of the application, the system-property or system-environment variable "ARTIFACT_NAME". If "ARTIFACT_NAME" is not specified, the value "unknown app" will be used instead.
