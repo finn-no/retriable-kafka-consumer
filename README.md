@@ -50,7 +50,7 @@ The record will then be retried until it is successfully processed without excep
     pool.monitor.monitor()
 
 
-# Detailed description goes here
+# Detailed description 
 
 This library is inspired by an article written by [Über Engineering](https://eng.uber.com/reliable-reprocessing/), but takes a slightly different approach.
 Instead of using _n_ retry-topics and a dead-letter-queue, we use 1 retry queue and timestamps in the record headers to check if a record is expired. 
