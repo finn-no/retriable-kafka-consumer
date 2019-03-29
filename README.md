@@ -29,7 +29,7 @@ The record will then be retried until it is successfully processed without excep
                     .processingFunction(record -> process(record, adStore, insightEnqueuer))
                     .build();
                     
-    pool.start();
+    pool.monitor.start();
 
 ## All options included  
 
@@ -53,7 +53,7 @@ The record will then be retried until it is successfully processed without excep
 # Detailed description 
 
 This library is inspired by an article written by [Über Engineering](https://eng.uber.com/reliable-reprocessing/), but takes a slightly different approach.
-Instead of using _n_ retry-topics and a dead-letter-queue, we use 1 retry queue and timestamps in the record headers to check if a record is expired. 
+Instead of using _n_ retry-topics and a dead-letter-queue, we use 1 retry queue and timestamps/counters in the record header to check if a record is expired. 
 
 The retry-topic will be named "retry-<groupid>-<original-topic>", and the pool will consume messages from this topic in the same way as the original topic. 
 Consumer-threads are made restartable, meaning if any of the threads die for some reason they can be restarted by the monitor. 
@@ -64,8 +64,8 @@ Reprocessing is controlled by headers on the kafka-record to keep track of how m
 
 Metric counters are exposed via prometheus. 
 
-* expired_events
-* failed_events
-* processed_successfully_events
+* expired_events, number of events that has been reprocessed until `retryPeriod` is exceeded. 
+* failed_events, number of events that has failed and will be reprocessed
+* processed_successfully_events, number or successful events processed
 
 These are all in the namespace of the application, the system-property or system-environment variable "ARTIFACT_NAME". If "ARTIFACT_NAME" is not specified, the value "unknown app" will be used instead.
