@@ -1,0 +1,5 @@
+*.iml
+target
+*/logs/*
+.idea/*
+yammer-announcement.vm
