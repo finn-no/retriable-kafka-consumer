@@ -24,6 +24,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
 
 
     public final RestartableMonitor monitor;
+    private final RetryHandler<K, V> retryHandler;
 
     /**
      * @param consumerPoolCount   - number of kafka-consumers
@@ -66,7 +67,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
     ) {
 
         // queue for safe communication between consumers and retry-producer
-        RetryHandler<K, V> retryHandler = new RetryHandler<>(factory::producer, retryThrottleMillis, factory.groupId());
+        retryHandler = new RetryHandler<>(factory::producer, retryThrottleMillis, factory.groupId());
 
         // consumers
         List<Restartable> consumers =
@@ -99,6 +100,10 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
 
         // monitor all consumers and producer with the same monitor
         monitor = new RestartableMonitor(consumers);
+    }
+
+    public void produceRetryMessage(ConsumerRecord<K, V> record) {
+        retryHandler.produceRetryMessage(record);
     }
 
     @Override

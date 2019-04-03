@@ -34,14 +34,20 @@ public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
 
     @Override
     public void accept(ConsumerRecord<K, V> record) {
-        String retryTopic = retryTopicName(record.topic(), groupId);
-        log.info("Putting message with key [{}] on retry-topic [{}].", record.key(), retryTopic);
-        factory.get().send(createRetryRecord(record, retryTopic, System.currentTimeMillis()));
+        produceRetryMessage(record);
+        // TODO Isn't this sleep weird -> will cause a sleep in regular consumer when errors are encountered
+        //  for the first time. Should rather keep the retry interval specified in the retry consumer (RestartableKafkaConsumer)
         try {
             Thread.sleep(retryThrottleMillis);
         } catch (InterruptedException e) {
             log.error("Interrupted while sleeping");
         }
+    }
+
+    public void produceRetryMessage(ConsumerRecord<K, V> record) {
+        String retryTopic = retryTopicName(record.topic(), groupId);
+        log.info("Putting message with key [{}] on retry-topic [{}].", record.key(), retryTopic);
+        factory.get().send(createRetryRecord(record, retryTopic, System.currentTimeMillis()));
     }
 
     public static List<String> retryTopicNames(List<String> topics, String groupId) {
