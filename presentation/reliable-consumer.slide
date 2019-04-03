@@ -15,6 +15,16 @@ Til vi får fikset feilen
 Eller gir opp
 .image 500px_kafka_logo.png
 
+* The Über Way
+
+* n retry topic
+
+- send melding til retry-topic X[0..n]
+- n ganger
+- etter n, send til DLQ
+
+* The Finn/Distribütion Way
+
 * Teknisk
 
 Pseudo
