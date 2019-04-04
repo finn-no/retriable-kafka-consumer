@@ -17,8 +17,8 @@ import static java.util.stream.IntStream.rangeClosed;
  * <p>This class will create a set of consumers that subscribes to a given topic and mechanism to
  * resend records that fails to be processed.
  *
- * @param <K>
- * @param <V>
+ * @param <K>  - the key-type of the kafka topic
+ * @param <V>  - the value-type of the kafka-topic
  */
 public class ReliableKafkaConsumerPool<K, V> implements Closeable {
 
@@ -32,6 +32,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
      * @param processingFunction  - function that will process messages
      * @param pollFunction        - function to poll messages
      * @param retryPeriodInMillis - how long retry-producer should retry the message before giving up
+     * @param retryThrottleMillis - how long we should delay before processing the record again
      */
     public ReliableKafkaConsumerPool(
             int consumerPoolCount,
