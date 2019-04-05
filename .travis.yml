@@ -1,22 +1,4 @@
-language: finnbuild
-script:
-- export RUN_FINNBUILD_AS_SUDO=false
-- run_finnbuild
-cache:
-  directories:
-  - $HOME/.m2
-notifications:
-  slack:
-    rooms:
-    - sch-chat:7qvsvvRaIZJmBP739JSGiNUa
-    on_success: change
-    on_failure: always
-  webhooks:
-  - https://devhose.spt-engprod-pro.schibsted.io/devhose/travis
-
-after_failure:
-- reports-publisher
-
-after_success:
-- reports-publisher
-
+language: java
+script: mvn clean install
+jdk:
+  - oraclejdk8
