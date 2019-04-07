@@ -79,3 +79,17 @@ Metric counters are exposed via prometheus.
 * processed_successfully_events, number or successful events processed
 
 These are all in the namespace of the application, the system-property or system-environment variable "ARTIFACT_NAME". If "ARTIFACT_NAME" is not specified, the value "unknown app" will be used instead.
+
+
+# Development
+
+## Release
+1. Update pom version to final version
+2. Upload to nexus
+
+     $ mvn clean deploy -Psign  
+     $ mvn nexus-staging:release
+
+3. Tag current revision with "v<VERSION-NUMBER>"
+4. Push tags
+5. Increment current version to -SNAPSHOT
