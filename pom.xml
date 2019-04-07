@@ -5,7 +5,7 @@
     <groupId>no.finntech.retriable-kafka-consumer</groupId>
     <artifactId>retriable-kafka-consumer</artifactId>
     <packaging>jar</packaging>
-    <version>1.49-SNAPSHOT</version>
+    <version>1.49</version>
 
     <url>https://github.com/finn-no/retriable-kafka-consumer</url>
 
