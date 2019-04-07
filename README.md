@@ -6,12 +6,22 @@ The record will then be retried until it is successfully processed without excep
 
 # Usage
 
+## Dependency
+
+From maven central:
+
+	<dependency>
+	  <groupId>no.finntech.retriable-kafka-consumer</groupId>
+	  <artifactId>retriable-kafka-consumer</artifactId>
+	  <version>1.49</version>
+	</dependency>
+
 ## Requirements 
 
 * In your kafka-config, turn of auto-commit. 
 * You need to implement a `KafkaClientFactory`:
 
-      public interface KafkaClientFactory<K, V> {
+        public interface KafkaClientFactory<K, V> {
     
             Consumer<K, V> consumer();
     
