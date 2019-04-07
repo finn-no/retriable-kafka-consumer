@@ -7,6 +7,9 @@
     <packaging>jar</packaging>
     <version>1.49</version>
 
+    <name>Retriable Kafka Consumer</name>
+    <description>Retries processing when consuming records from kafka.</description>
+
     <url>https://github.com/finn-no/retriable-kafka-consumer</url>
 
     <licenses>
@@ -23,6 +26,15 @@
         <kotlin.version>1.3.21</kotlin.version>
     </properties>
 
+
+    <developers>
+        <developer>
+            <email>nilsmagnus@gmail.com</email>
+            <name>Nils Larsgård</name>
+            <organization>Kodemaker</organization>
+            <organizationUrl>https://kodemaker.no</organizationUrl>
+        </developer>
+    </developers>
 
     <scm>
         <connection>scm:git:git@github.com:finn-no/retriable-kafka-consumer.git</connection>
