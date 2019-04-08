@@ -56,8 +56,8 @@ public class ReliablePoolBuilder<K, V> {
     /**
      * Millis to wait before a failed message is retried - defaults to 5 secounds (5_000 milliseconds)
      *
-     * @param retryThrottleMillis
-     * @return
+     * @param retryThrottleMillis millis to sleep before record is retried
+     * @return the builder
      */
     public ReliablePoolBuilder<K, V> retryThrottleMillis(long retryThrottleMillis) {
         this.retryThrottleMillis = retryThrottleMillis;
@@ -67,8 +67,8 @@ public class ReliablePoolBuilder<K, V> {
     /**
      * Total millis the message is allowed to live before it is discarded - defaults to 1 hour
      *
-     * @param retryPeriodMillis
-     * @return
+     * @param retryPeriodMillis number of millis a record is allowed to live before it is discarded
+     * @return the builder
      */
     public ReliablePoolBuilder<K, V> retryPeriodMillis(long retryPeriodMillis) {
         this.retryPeriodMillis = retryPeriodMillis;

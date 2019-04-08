@@ -253,9 +253,9 @@
                 - Expose version number to prometheus counter
             </action>
         </release>
-        <release version="1.48">
-            <action dev="nillarsg" type="add" issue="ADOUT-8711">
-                - Add version to manifest
+        <release version="1.49">
+            <action dev="nilsmagnus@gmail.com" type="add" issue="#3">
+              - First public release
             </action>
         </release>
 

@@ -6,12 +6,22 @@ The record will then be retried until it is successfully processed without excep
 
 # Usage
 
+## Dependency
+
+From maven central:
+
+	<dependency>
+	  <groupId>no.finntech.retriable-kafka-consumer</groupId>
+	  <artifactId>retriable-kafka-consumer</artifactId>
+	  <version>1.49</version>
+	</dependency>
+
 ## Requirements 
 
 * In your kafka-config, turn of auto-commit. 
 * You need to implement a `KafkaClientFactory`:
 
-      public interface KafkaClientFactory<K, V> {
+        public interface KafkaClientFactory<K, V> {
     
             Consumer<K, V> consumer();
     
@@ -69,3 +79,17 @@ Metric counters are exposed via prometheus.
 * processed_successfully_events, number or successful events processed
 
 These are all in the namespace of the application, the system-property or system-environment variable "ARTIFACT_NAME". If "ARTIFACT_NAME" is not specified, the value "unknown app" will be used instead.
+
+
+# Development
+
+## Release
+1. Update pom version to final version
+2. Upload to nexus
+
+     $ mvn clean deploy -Psign  
+     $ mvn nexus-staging:release
+
+3. Tag current revision with "v<VERSION-NUMBER>"
+4. Push tags
+5. Increment current version to -SNAPSHOT
