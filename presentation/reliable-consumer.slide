@@ -1,31 +1,46 @@
-Reliable Kafka Consumer
-Et Finn Open Source prosjekt
+Retriable Kafka Consumer
+A Finn Open Source prosjekt
 
 Nils Larsgård
-Distribution Team
+Distribution Team/Finn
 nils@kodemaker.no
 
+* Retriable Kafka Consumer
 
-* Hva løser vi
+- Product of needs in finn/distribution
+- Battle tested
 
-Reprosessere meldinger som feiler
+  <dependency>
+    <groupId>no.finntech.retriable-kafka-consumer</groupId>
+    <artifactId>retriable-kafka-consumer</artifactId>
+    <version>1.49</version>
+  </dependency>
 
-Til vi får fikset feilen
 
-Eller gir opp
+* What do we solve
+
+Retry processing of kafka-records until
+
+- ... we fix the code with a redeploy
+- ... underlying systems behave correctly again
+- ... give up
+
 .image 500px_kafka_logo.png
 
 * The Über Way
 
 * n retry topic
 
-- send melding til retry-topic X[0..n]
-- n ganger
-- etter n, send til DLQ
+- send record to retry-topic X[0..n]
+- n times     
+- after n, send til DLQ
 
-* The Finn/Distribütion Way
+* The Distribütion Way
 
-* Teknisk
+* Pseudo algorithm
+
+- 1 retry topic
+- RetryperiodMillis
 
 Pseudo
 
@@ -37,12 +52,34 @@ Pseudo
         sendTilRetryTopic( melding )
     }
 
+* Usage
+
+- Need to provide a EventClientFactory with kafka-config. Set autocommit to false. 
+
+  // build a consumer-pool 
+  ReliableKafkaConsumerPool<String,String> pool = new ReliablePoolBuilder<>(eventClientFactory)
+            .topics(List.of(TOPIC, TOPIC2)) // list of topics to subscribe to
+            .poolCount(5) // optional: number of threads consuming from kafka 
+            .afterProcess(consumer -> commit(consumer)) // optional: after a poll, do something with consumer
+            .processingFunction(record -> process(record)) // required : a function that processes records
+            .retryPeriodMillis(24 * 60 * 60 * 1000) // optional: how long a message should be retried before given up on
+            .retryThrottleMillis(5_000) // optional: specify how fast a message should be retried
+            .build();
+
+
+  // start the pool
+  pool.monitor.start();
+
+
+
+  // optional: check if all consumer-threads are alive, recommended to check these every minute or so
+  pool.monitor.monitor()
 
 * Maintainers
 
 - Kenneth Tiller
 - Nikolaj Vincent Vaags
-- Thor Marius Henrichsen
 - Nils Larsgård
+- You
 
-Pull requests er velkomne :)
+Pull requests are welcome :)
