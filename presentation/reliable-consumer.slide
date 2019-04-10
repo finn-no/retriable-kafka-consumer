@@ -75,6 +75,14 @@ Pseudo
   // optional: check if all consumer-threads are alive, recommended to check these every minute or so
   pool.monitor.monitor()
 
+* Prometheus metrics
+
+Per consumed topic, number of
+
+- processed records
+- failed records
+- expired records
+
 * Maintainers
 
 - Kenneth Tiller
