@@ -1,5 +1,5 @@
 Retriable Kafka Consumer
-A Finn Open Source prosjekt
+A Finn Open Source Project
 
 Nils Larsgård
 Distribution Team/Finn
@@ -86,8 +86,9 @@ Per consumed topic, number of
 * Maintainers
 
 - Kenneth Tiller
-- Nikolaj Vincent Vaags
+- Nikolai Vincent Vaags
 - Nils Larsgård
+- Jan Gerhard Schøpp
 - You?
 
 Pull requests are welcome :)
