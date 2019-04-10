@@ -33,7 +33,7 @@ Retry processing of kafka-records until
 
 - send record to retry-topic X[0..n]
 - n times     
-- after n, send til DLQ
+- after n, send to Dead Letter Queue for manual inspection
 
 * The Distribütion Way
 
@@ -54,7 +54,7 @@ Pseudo
 
 * Usage
 
-- Need to provide a EventClientFactory with kafka-config. Set autocommit to false. 
+- Need to provide a KafkaClientFactory with kafka-config. Set autocommit to false. 
 
   // build a consumer-pool 
   ReliableKafkaConsumerPool<String,String> pool = new ReliablePoolBuilder<>(eventClientFactory)
