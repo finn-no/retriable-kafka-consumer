@@ -1,3 +1,7 @@
+[![Known Vulnerabilities](https://snyk.io/test/github/finn-no/retriable-kafka-consumer/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/finn-no/retriable-kafka-consumer?targetFile=pom.xml)
+
+[![Build Status](https://travis-ci.com/finn-no/retriable-kafka-consumer.svg?branch=master)](https://travis-ci.com/finn-no/retriable-kafka-consumer)
+
 # Retriable Kafka Consumer
 
 `retriable-kafka-consumer` is a library for retriable event-processing using kafka. 
