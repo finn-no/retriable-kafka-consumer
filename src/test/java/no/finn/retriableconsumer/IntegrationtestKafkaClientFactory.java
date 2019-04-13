@@ -1,4 +1,4 @@
-package no.finntech.retriableconsumer;
+package no.finn.retriableconsumer;
 
 import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;

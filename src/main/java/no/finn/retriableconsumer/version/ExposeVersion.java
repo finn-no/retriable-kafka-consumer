@@ -1,4 +1,4 @@
-package no.finntech.retriableconsumer.version;
+package no.finn.retriableconsumer.version;
 
 import java.util.Locale;
 import java.util.Optional;
