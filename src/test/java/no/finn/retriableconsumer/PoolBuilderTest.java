@@ -1,4 +1,4 @@
-package no.finntech.retriableconsumer;
+package no.finn.retriableconsumer;
 
 import org.junit.Test;
 

@@ -15,7 +15,7 @@ The record will then be retried until it is successfully processed without excep
 From maven central:
 
 	<dependency>
-	  <groupId>no.finntech.retriable-kafka-consumer</groupId>
+	  <groupId>no.finn.retriable-kafka-consumer</groupId>
 	  <artifactId>retriable-kafka-consumer</artifactId>
 	  <version>1.49</version>
 	</dependency>

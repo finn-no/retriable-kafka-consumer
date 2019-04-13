@@ -1,4 +1,4 @@
-package no.finntech.retriableconsumer;
+package no.finn.retriableconsumer;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 
 import io.prometheus.client.Counter;
+import no.finn.retriableconsumer.version.ExposeVersion;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -20,13 +21,11 @@ import org.apache.kafka.common.header.Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static no.finntech.retriableconsumer.version.ExposeVersion.getApplicationNameForPrometheus;
-
 public class RestartableKafkaConsumer<K, V> implements Restartable {
 
     private static final Counter EXPIRED_EVENTS_COUNTER =
             Counter.build()
-                    .namespace(getApplicationNameForPrometheus())
+                    .namespace(ExposeVersion.getApplicationNameForPrometheus())
                     .name("expired_events")
                     .labelNames("topic")
                     .help("Events expired on retry queue. Must be handled manually")
@@ -34,7 +33,7 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
 
     private static final Counter FAILED_EVENTS_COUNTER =
             Counter.build()
-                    .namespace(getApplicationNameForPrometheus())
+                    .namespace(ExposeVersion.getApplicationNameForPrometheus())
                     .name("failed_events")
                     .labelNames("topic")
                     .help("Events failed.")
@@ -42,7 +41,7 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
 
     private static final Counter PROCESSED_SUCCESSFULLY_EVENTS_COUNTER =
             Counter.build()
-                    .namespace(getApplicationNameForPrometheus())
+                    .namespace(ExposeVersion.getApplicationNameForPrometheus())
                     .name("processed_successfully_events")
                     .labelNames("topic")
                     .help("Events successfully processed.")

@@ -1,7 +1,7 @@
-import no.finntech.retriableconsumer.KafkaClientFactory
-import no.finntech.retriableconsumer.ReliableKafkaConsumerPool
-import no.finntech.retriableconsumer.RetryHandler
-import no.finntech.retriableconsumer.TestUtil.assertWithinTimespan
+import no.finn.retriableconsumer.KafkaClientFactory
+import no.finn.retriableconsumer.ReliableKafkaConsumerPool
+import no.finn.retriableconsumer.RetryHandler
+import no.finn.retriableconsumer.TestUtil.assertWithinTimespan
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
