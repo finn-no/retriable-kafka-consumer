@@ -8,7 +8,13 @@
 If processing of a kafka-record throws an unhandled exception, the record is re-sent to a retry-topic. 
 The record will then be retried until it is successfully processed without exceptions or the `retryPeriod` is exceeded.
 
+
+
 # Usage
+
+## Limitations
+
+Since this library re-posts your messages to a new topic, the order of the messages is not preserved. So if you depend on in-order-processing, this library is not for you.
 
 ## Dependency
 
