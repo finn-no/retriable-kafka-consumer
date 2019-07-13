@@ -20,7 +20,7 @@
     </licenses>
 
     <properties>
-        <version.kafka>2.0.0</version.kafka>
+        <version.kafka>2.1.1</version.kafka>
         <version.kotlin>1.3.21</version.kotlin>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <kotlin.version>1.3.21</kotlin.version>
