@@ -93,6 +93,8 @@ These are all in the namespace of the application, the system-property or system
 
 # Development
 
+* Use java 8 (e.g. 8.0.222-amzn)
+
 ## Release
 1. Update pom version to final version
 2. Upload to nexus
