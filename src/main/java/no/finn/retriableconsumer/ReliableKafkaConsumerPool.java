@@ -84,7 +84,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                                                 retryDurationInMillis))
                         .collect(Collectors.toList());
 
-        //retry-consumers
+        //retry-consumer
         consumers.add(
                 new RestartableKafkaConsumer<>(
                         factory::consumer,

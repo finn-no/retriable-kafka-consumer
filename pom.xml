@@ -20,7 +20,7 @@
     </licenses>
 
     <properties>
-        <version.kafka>2.1.1</version.kafka>
+        <version.kafka>2.3.0</version.kafka>
         <version.kotlin>1.3.21</version.kotlin>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <kotlin.version>1.3.21</kotlin.version>
@@ -47,12 +47,12 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
-            <version>1.0.3</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.10.0</version>
+            <version>2.12.1</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -63,13 +63,13 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.12.2</version>
+            <version>3.13.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.28</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -79,7 +79,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.7</version>
+            <version>3.9</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -103,7 +103,7 @@
         <dependency>
             <groupId>io.vavr</groupId>
             <artifactId>vavr</artifactId>
-            <version>0.10.0</version>
+            <version>0.10.2</version>
         </dependency>
 
         <dependency>
