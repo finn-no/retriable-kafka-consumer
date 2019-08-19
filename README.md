@@ -28,7 +28,8 @@ From maven central:
 
 ## Requirements 
 
-* In your kafka-config, turn of auto-commit. 
+* In your kafka-config, turn off auto-commit. The library will handle commits.
+
 * You need to implement a `KafkaClientFactory`:
 
         public interface KafkaClientFactory<K, V> {
@@ -57,7 +58,7 @@ From maven central:
     ReliableKafkaConsumerPool<String,String> pool = new ReliablePoolBuilder<>(eventClientFactory)
                 .topics(List.of(TOPIC, TOPIC2)) // list of topics to subscribe to
                 .poolCount(5) // optional: number of threads consuming from kafka 
-                .afterProcess(consumer -> commit(consumer)) // optional: after a poll, do something with consumer
+                .afterProcess(consumer -> commit(consumer)) // optional: after a poll, do something with consumer. If you specify this, be sure to commit at some point in this lambda since it overrides the default commit that the library does under the hood
                 .processingFunction(record -> process(record)) // required : a function that processes records
                 .retryPeriodMillis(24 * 60 * 60 * 1000) // optional: how long a message should be retried before given up on
                 .retryThrottleMillis(5_000) // optional: specify how fast a message should be retried
