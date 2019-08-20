@@ -28,32 +28,12 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
     /**
      * @param consumerPoolCount   - number of kafka-consumers
      * @param factory             - factory that creates consumer and producer
-     * @param topic               - topic to listen to
+     * @param topics               - topic to listen to
      * @param processingFunction  - function that will process messages
      * @param pollFunction        - function to poll messages
-     * @param retryPeriodInMillis - how long retry-producer should retry the message before giving up
+     * @param retryDurationInMillis - how long retry-producer should retry the message before giving up
      * @param retryThrottleMillis - how long we should delay before processing the record again
      */
-    public ReliableKafkaConsumerPool(
-            int consumerPoolCount,
-            KafkaClientFactory<K, V> factory,
-            List<String> topic,
-            Function<ConsumerRecord<K, V>, Boolean> processingFunction,
-            Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
-            long retryThrottleMillis,
-            long retryPeriodInMillis
-    ) {
-        this(
-                consumerPoolCount,
-                factory,
-                topic,
-                processingFunction,
-                pollFunction,
-                consumer -> null,
-                retryThrottleMillis,
-                retryPeriodInMillis
-        );
-    }
 
     public ReliableKafkaConsumerPool(
             int consumerPoolCount,
@@ -61,7 +41,6 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
             List<String> topics,
             Function<ConsumerRecord<K, V>, Boolean> processingFunction,
             Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
-            Function<Consumer<K, V>, Void> afterProcess,
             long retryThrottleMillis,
             long retryDurationInMillis
     ) {
@@ -79,7 +58,6 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                                                 topics,
                                                 processingFunction,
                                                 pollFunction,
-                                                afterProcess,
                                                 retryHandler,
                                                 retryDurationInMillis))
                         .collect(Collectors.toList());
@@ -91,10 +69,6 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                         RetryHandler.retryTopicNames(topics, factory.groupId()),
                         processingFunction,
                         pollFunction,
-                        ap -> {
-                            ap.commitSync();
-                            return null;
-                        },
                         retryHandler,
                         retryDurationInMillis));
 
