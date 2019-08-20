@@ -24,10 +24,6 @@ public class ReliablePoolBuilder<K, V> {
     private Function<ConsumerRecord<K, V>, Boolean> processingFunction;
     private Long retryThrottleMillis = 5000L;
     private Long retryPeriodMillis = 24 * 60 * 60 * 1000L; // 1 day by default
-    private Function<Consumer<K, V>, Void> afterProcess = kvConsumer -> {
-        kvConsumer.commitSync();
-        return null;
-    };
 
     public ReliablePoolBuilder(KafkaClientFactory<K, V> factory) {
         this.factory = factory;
@@ -75,10 +71,6 @@ public class ReliablePoolBuilder<K, V> {
         return this;
     }
 
-    public ReliablePoolBuilder<K, V> afterProcess(Function<Consumer<K, V>, Void> afterprocess) {
-        this.afterProcess = afterprocess;
-        return this;
-    }
 
     public ReliableKafkaConsumerPool<K, V> build() {
         verifyNotNull("pollFunction", pollFunction);
@@ -88,9 +80,8 @@ public class ReliablePoolBuilder<K, V> {
         verifyNotNull("retryThrottleMillis", retryThrottleMillis);
         verifyNotNull("retryPeriodMillis", retryPeriodMillis);
         verifyNotNull("factory", factory);
-        verifyNotNull("afterProcess", afterProcess);
 
-        return new ReliableKafkaConsumerPool<>(poolCount, factory, topics, processingFunction, pollFunction, afterProcess, retryThrottleMillis, retryPeriodMillis);
+        return new ReliableKafkaConsumerPool<>(poolCount, factory, topics, processingFunction, pollFunction, retryThrottleMillis, retryPeriodMillis);
     }
 
     private void verifyNotNull(String fieldName, Object field) {

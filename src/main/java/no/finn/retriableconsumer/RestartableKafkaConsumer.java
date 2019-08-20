@@ -59,7 +59,6 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
     private final Function<ConsumerRecord<K, V>, Boolean> processingFunction;
     private final java.util.function.Consumer<ConsumerRecord<K, V>> retryConsumer;
     private final List<String> topics;
-    private final Function<Consumer<K, V>, Void> afterProcess;
     private final long retryDuration;
     private final Supplier<Consumer<K, V>> consumerFactory;
 
@@ -69,7 +68,6 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
             List<String> topics,
             Function<ConsumerRecord<K, V>, Boolean> processRecord,
             Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
-            Function<Consumer<K, V>, Void> afterProcess,
             java.util.function.Consumer<ConsumerRecord<K, V>> retryHandler,
             long retryDurationInMillis) {
         this.consumerFactory = consumerFactory;
@@ -83,7 +81,6 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
                 return ConsumerRecords.empty();
             }
         };
-        this.afterProcess = afterProcess;
         this.retryConsumer = retryHandler;
         this.consumerName = "restartableConsumer-" + consumerCounter.getAndIncrement();
         for (String topic : topics) {
@@ -136,7 +133,7 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
                 }
                 if (!record.isEmpty()) {
                     try {
-                        afterProcess.apply(consumer);
+                        consumer.commitSync();
                     } catch (CommitFailedException | RetriableException cfe) {
                         log.warn("Commit failed ", cfe);
                     }

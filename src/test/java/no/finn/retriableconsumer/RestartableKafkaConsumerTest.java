@@ -112,7 +112,7 @@ public class RestartableKafkaConsumerTest {
         java.util.function.Consumer<ConsumerRecord<String, String>> failedQueue = mock(java.util.function.Consumer.class);
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), s -> null, failedQueue, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), failedQueue, 100_000_000);
 
         consumer.run();
 
@@ -139,7 +139,7 @@ public class RestartableKafkaConsumerTest {
 
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(1000), s -> null, failer, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(1000), failer, 100_000_000);
 
         consumer.run();
 
@@ -163,7 +163,7 @@ public class RestartableKafkaConsumerTest {
 
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), s -> null, failedQueue, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), failedQueue, 100_000_000);
 
         consumer.run();
 

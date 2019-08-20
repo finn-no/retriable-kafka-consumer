@@ -22,9 +22,8 @@ class ReliableKafkaConsumerPoolTest {
 
         val processingFunction = Function<ConsumerRecord<String, String>, Boolean> { TODO("not in use") }
         val pollFunction = Function<Consumer<String, String>, ConsumerRecords<String, String>> { TODO("not in use") }
-        val afterProcess = Function<Consumer<String, String>, Void> { TODO("Not in use") }
 
-        val pool = ReliableKafkaConsumerPool(1, factory, Collections.singletonList("topic"), processingFunction, pollFunction, afterProcess, 100, 100_000)
+        val pool = ReliableKafkaConsumerPool(1, factory, Collections.singletonList("topic"), processingFunction, pollFunction,100, 100_000)
 
         assertEquals(2, pool.size())
     }
