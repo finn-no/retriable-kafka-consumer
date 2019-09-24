@@ -1,11 +1,11 @@
 package no.finn.retriableconsumer;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.Producer;
@@ -23,18 +23,18 @@ public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
 
     private final Supplier<Producer<K, V>> factory;
     private final long retryThrottleMillis;
-    private final String groupId;
+    private final Map<String, String> topicsRetryTopics;
 
-    RetryHandler(Supplier<Producer<K, V>> factory, long retryThrottleMillis, String groupId) {
+    RetryHandler(Supplier<Producer<K, V>> factory, long retryThrottleMillis, Map<String, String> topicsRetryTopics) {
         this.factory = factory;
         this.retryThrottleMillis = retryThrottleMillis;
-        this.groupId = groupId;
+        this.topicsRetryTopics = topicsRetryTopics;
     }
 
 
     @Override
     public void accept(ConsumerRecord<K, V> record) {
-        String retryTopic = retryTopicName(record.topic(), groupId);
+        String retryTopic = topicsRetryTopics.get(record.topic());
         log.info("Putting message with key [{}] on retry-topic [{}].", record.key(), retryTopic);
         factory.get().send(createRetryRecord(record, retryTopic, System.currentTimeMillis()));
         try {
@@ -42,10 +42,6 @@ public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
         } catch (InterruptedException e) {
             log.error("Interrupted while sleeping");
         }
-    }
-
-    public static List<String> retryTopicNames(List<String> topics, String groupId) {
-        return topics.stream().map(topic -> retryTopicName(topic, groupId)).collect(Collectors.toList());
     }
 
     ProducerRecord<K, V> createRetryRecord(ConsumerRecord<K, V> oldRecord, String retryTopic, long nowInMillis) {
@@ -80,10 +76,4 @@ public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
 
         return new RecordHeader(HEADER_KEY_REPROCESS_COUNTER, String.valueOf(reprocessCount + 1).getBytes());
     }
-
-    static String retryTopicName(String topic, String groupId) {
-        if (StringUtils.startsWith(topic, "retry")) return topic;
-        return String.format("%s-%s-%s", "retry", groupId, topic);
-    }
-
 }

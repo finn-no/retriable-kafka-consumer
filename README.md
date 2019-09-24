@@ -56,7 +56,7 @@ From maven central:
 
     // build a consumer-pool 
     ReliableKafkaConsumerPool<String,String> pool = new ReliablePoolBuilder<>(eventClientFactory)
-                .topics(List.of(TOPIC, TOPIC2)) // list of topics to subscribe to
+                .topics(List.of(TOPIC, TOPIC2)) // list of topics to subscribe to, will generate retry topics
                 .poolCount(5) // optional: number of threads consuming from kafka 
                 .processingFunction(record -> process(record)) // required : a function that processes records
                 .retryPeriodMillis(24 * 60 * 60 * 1000) // optional: how long a message should be retried before given up on
@@ -69,6 +69,21 @@ From maven central:
     // optional: check if all consumer-threads are alive, recommended to check these every minute or so
     pool.monitor.monitor()
 
+## Explicitly set retry topics  
+
+    // build a consumer-pool 
+    ReliableKafkaConsumerPool<String,String> pool = new ReliablePoolBuilder<>(eventClientFactory)
+                .topicsRetryTopics(Collections.singletonMap(TOPIC, RETRY_TOPIC)) //explicitly set retry topic.
+                .poolCount(5) // optional: number of threads consuming from kafka 
+                .processingFunction(record -> process(record)) // required : a function that processes records
+                .retryPeriodMillis(24 * 60 * 60 * 1000) // optional: how long a message should be retried before given up on
+                .retryThrottleMillis(5_000) // optional: specify how fast a message should be retried
+                .build();
+                
+    pool.monitor.start(); // start the pool
+    
+    // optional: check if all consumer-threads are alive, recommended to check these every minute or so
+    pool.monitor.monitor()
 
 # Detailed description 
 

@@ -3,6 +3,7 @@ package no.finn.retriableconsumer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -134,7 +135,11 @@ public class RestartableKafkaConsumerTest {
 
 
         Producer<String, String> mockProducer = mock(Producer.class);
-        RetryHandler<String, String> failer = new RetryHandler<>(() -> mockProducer, 100, "testgroupid");
+        Map<String, String> topicsRetryTopic = new HashMap<String, String>() {{
+            put("topic", "retry-topic");
+            put("topic1", "retry-topic1");
+        }};
+        RetryHandler<String, String> failer = new RetryHandler<>(() -> mockProducer, 100, topicsRetryTopic);
 
 
         RestartableKafkaConsumer<String, String> consumer =
