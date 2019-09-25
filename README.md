@@ -23,7 +23,7 @@ From maven central:
 	<dependency>
 	  <groupId>no.finn.retriable-kafka-consumer</groupId>
 	  <artifactId>retriable-kafka-consumer</artifactId>
-	  <version>1.51</version>
+	  <version>1.52</version>
 	</dependency>
 
 ## Requirements 
