@@ -1,7 +1,9 @@
 package no.finn.retriableconsumer;
 
 import java.io.Closeable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,7 +30,6 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
     /**
      * @param consumerPoolCount   - number of kafka-consumers
      * @param factory             - factory that creates consumer and producer
-     * @param topics               - topic to listen to
      * @param processingFunction  - function that will process messages
      * @param pollFunction        - function to poll messages
      * @param retryDurationInMillis - how long retry-producer should retry the message before giving up
@@ -38,7 +39,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
     public ReliableKafkaConsumerPool(
             int consumerPoolCount,
             KafkaClientFactory<K, V> factory,
-            List<String> topics,
+            Map<String, String> topicsRetryTopics,
             Function<ConsumerRecord<K, V>, Boolean> processingFunction,
             Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
             long retryThrottleMillis,
@@ -46,7 +47,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
     ) {
 
         // queue for safe communication between consumers and retry-producer
-        RetryHandler<K, V> retryHandler = new RetryHandler<>(factory::producer, retryThrottleMillis, factory.groupId());
+        RetryHandler<K, V> retryHandler = new RetryHandler<>(factory::producer, retryThrottleMillis, topicsRetryTopics);
 
         // consumers
         List<Restartable> consumers =
@@ -55,7 +56,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                                 i ->
                                         new RestartableKafkaConsumer<>(
                                                 factory::consumer,
-                                                topics,
+                                                new ArrayList<>(topicsRetryTopics.keySet()),
                                                 processingFunction,
                                                 pollFunction,
                                                 retryHandler,
@@ -66,7 +67,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
         consumers.add(
                 new RestartableKafkaConsumer<>(
                         factory::consumer,
-                        RetryHandler.retryTopicNames(topics, factory.groupId()),
+                        new ArrayList<>(topicsRetryTopics.values()),
                         processingFunction,
                         pollFunction,
                         retryHandler,

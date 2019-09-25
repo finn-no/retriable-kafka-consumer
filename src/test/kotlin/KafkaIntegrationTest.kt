@@ -41,7 +41,7 @@ class KafkaIntegrationTest {
         }
         val pollFunction = Function<Consumer<String, String>, ConsumerRecords<String, String>> { it.poll(1) }
 
-        val pool = ReliableKafkaConsumerPool(3, factory, listOf("foo"), process, pollFunction, 10, 10_000)
+        val pool = ReliableKafkaConsumerPool(3, factory, mapOf("foo" to "retry-foo"), process, pollFunction, 10, 10_000)
 
         pool.monitor.start()
 
@@ -80,7 +80,7 @@ class KafkaIntegrationTest {
         }
         val poll = Function<Consumer<String, String>, ConsumerRecords<String, String>> { it.poll(1) }
 
-        val pool = ReliableKafkaConsumerPool(3, factory, listOf("foo"), process, poll, 10, 10_000_000)
+        val pool = ReliableKafkaConsumerPool(3, factory, mapOf("foo" to "retry-foo"), process, poll, 10, 10_000_000)
 
         pool.monitor.start()
 

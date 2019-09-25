@@ -1,15 +1,17 @@
 package no.finn.retriableconsumer;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.function.Function;
-
 import no.finn.retriableconsumer.version.ExposeVersion;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ReliablePoolBuilder<K, V> {
     static {
@@ -20,10 +22,10 @@ public class ReliablePoolBuilder<K, V> {
     private Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction = consumer -> consumer.poll(Duration.of(250, ChronoUnit.MILLIS));
     private Integer poolCount = 3;
     private final KafkaClientFactory<K, V> factory;
-    private List<String> topics;
     private Function<ConsumerRecord<K, V>, Boolean> processingFunction;
     private Long retryThrottleMillis = 5000L;
     private Long retryPeriodMillis = 24 * 60 * 60 * 1000L; // 1 day by default
+    private Map<String, String> topicsRetryTopics;
 
     public ReliablePoolBuilder(KafkaClientFactory<K, V> factory) {
         this.factory = factory;
@@ -40,7 +42,12 @@ public class ReliablePoolBuilder<K, V> {
     }
 
     public ReliablePoolBuilder<K, V> topics(List<String> topics) {
-        this.topics = topics;
+        this.topicsRetryTopics = topics.stream().collect(Collectors.toMap(topic -> topic, topic -> retryTopicName(topic, factory.groupId())));
+        return this;
+    }
+
+    public ReliablePoolBuilder<K, V> topicsRetryTopics(Map<String, String> topicsRetryTopics) {
+        this.topicsRetryTopics = topicsRetryTopics;
         return this;
     }
 
@@ -75,18 +82,23 @@ public class ReliablePoolBuilder<K, V> {
     public ReliableKafkaConsumerPool<K, V> build() {
         verifyNotNull("pollFunction", pollFunction);
         verifyNotNull("poolCount", poolCount);
-        verifyNotNull("topics", topics);
+        verifyNotNull("topicsRetryTopics", topicsRetryTopics);
         verifyNotNull("processingFunction", processingFunction);
         verifyNotNull("retryThrottleMillis", retryThrottleMillis);
         verifyNotNull("retryPeriodMillis", retryPeriodMillis);
         verifyNotNull("factory", factory);
 
-        return new ReliableKafkaConsumerPool<>(poolCount, factory, topics, processingFunction, pollFunction, retryThrottleMillis, retryPeriodMillis);
+        return new ReliableKafkaConsumerPool<>(poolCount, factory, topicsRetryTopics, processingFunction, pollFunction, retryThrottleMillis, retryPeriodMillis);
     }
 
     private void verifyNotNull(String fieldName, Object field) {
         if (field == null) {
             throw new IllegalStateException(fieldName + " is not set, cannot build an instance of" + ReliableKafkaConsumerPool.class.getCanonicalName());
         }
+    }
+
+    static String retryTopicName(String topic, String groupId) {
+        if (StringUtils.startsWith(topic, "retry")) return topic;
+        return String.format("%s-%s-%s", "retry", groupId, topic);
     }
 }

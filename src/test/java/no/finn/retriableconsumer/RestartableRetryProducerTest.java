@@ -9,7 +9,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -20,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 public class RestartableRetryProducerTest {
 
-    @Test
+/*    @Test
     public void topic_name() {
 
         String retryTopic = RetryHandler.retryTopicName("sometopic", "mygroup");
@@ -34,12 +36,17 @@ public class RestartableRetryProducerTest {
         String retryTopic = RetryHandler.retryTopicName("retry-sometopic", "mygroup");
 
         assertThat(retryTopic).isEqualToIgnoringCase("retry-sometopic");
-    }
+    }*/
 
     @Test
     public void create_producer_record_with_correct_headers_for_first_time_failing_Record() {
+        Map<String, String> topicsRetryTopics = new HashMap<String, String>() {{
+            put("topic", "retry-topic");
+        }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, "");
+        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
+
+
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
         ProducerRecord retryRecord = producer.createRetryRecord(oldRecord, "retry-topic", 1000);
@@ -56,8 +63,11 @@ public class RestartableRetryProducerTest {
 
     @Test
     public void conserve_timestamp_header_increse_counter_header() {
+        Map<String, String> topicsRetryTopics = new HashMap<String, String>() {{
+            put("topic", "retry-topic");
+        }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, "");
+        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
         oldRecord.headers().add(new RecordHeader(RetryHandler.HEADER_KEY_REPROCESS_COUNTER, "41".getBytes()));
@@ -79,8 +89,11 @@ public class RestartableRetryProducerTest {
 
     @Test
     public void parse_produced_counter_headers() {
+        Map<String, String> topicsRetryTopics = new HashMap<String, String>() {{
+            put("topic", "retry-topic");
+        }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, "");
+        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
         ProducerRecord retryRecord = producer.createRetryRecord(oldRecord, "retry-topic", 1000);
@@ -97,8 +110,11 @@ public class RestartableRetryProducerTest {
 
     @Test
     public void parse_produced_timestamp_header() {
+        Map<String, String> topicsRetryTopics = new HashMap<String, String>() {{
+            put("topic", "retry-topic");
+        }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, "");
+        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
         ProducerRecord retryRecord = producer.createRetryRecord(oldRecord, "retry-topic", 1000);
@@ -125,7 +141,11 @@ public class RestartableRetryProducerTest {
 
         ConsumerRecord<String, String> failedRecord = new ConsumerRecord<>("foo", 0, 0, "bar", "baz");
 
-        RetryHandler<String, String> retryProducer =new RetryHandler<>(()->kafkaProducerMock,100, "groupid");
+        Map<String, String> topicsRetryTopics = new HashMap<String, String>() {{
+            put("foo", "retry-groupid-foo");
+        }};
+
+        RetryHandler<String, String> retryProducer =new RetryHandler<>(()->kafkaProducerMock,100, topicsRetryTopics);
 
         retryProducer.accept(failedRecord);
 
