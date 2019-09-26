@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -42,12 +43,14 @@ public class ReliablePoolBuilder<K, V> {
     }
 
     public ReliablePoolBuilder<K, V> topics(List<String> topics) {
-        this.topicsRetryTopics = topics.stream().collect(Collectors.toMap(topic -> topic, topic -> retryTopicName(topic, factory.groupId())));
-        return this;
+        return topicsRetryTopics(topics.stream().collect(Collectors.toMap(topic -> topic, topic -> retryTopicName(topic, factory.groupId()))));
     }
 
     public ReliablePoolBuilder<K, V> topicsRetryTopics(Map<String, String> topicsRetryTopics) {
-        this.topicsRetryTopics = topicsRetryTopics;
+        HashMap<String, String> topicsWithRetryMapping = new HashMap<>();
+        topicsWithRetryMapping.putAll(topicsRetryTopics);
+        topicsWithRetryMapping.putAll(topicsRetryTopics.values().stream().collect(Collectors.toMap(retryTopic -> retryTopic, retryTopic -> retryTopic)));
+        this.topicsRetryTopics = topicsWithRetryMapping;
         return this;
     }
 

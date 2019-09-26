@@ -258,7 +258,16 @@
               - First public release
             </action>
         </release>
-
+        <release version="1.52">
+            <action dev="morten.segelvik@gmail.com" type="add">
+                - added possibility to specify retry topic per topic
+            </action>
+        </release>
+        <release version="1.53">
+            <action dev="morten.segelvik@gmail.com" type="add">
+                - retry topics now also have itself as retry topic
+            </action>
+        </release>
 
     </body>
 </document>
