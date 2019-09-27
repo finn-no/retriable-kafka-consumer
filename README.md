@@ -59,6 +59,7 @@ From maven central:
                 .topics(List.of(TOPIC, TOPIC2)) // list of topics to subscribe to, will generate retry topics
                 .poolCount(5) // optional: number of threads consuming from kafka 
                 .processingFunction(record -> process(record)) // required : a function that processes records
+                .expiredHandler(record -> handleExpiredRecord(record)) // optional : a consumer that processes expired records
                 .retryPeriodMillis(24 * 60 * 60 * 1000) // optional: how long a message should be retried before given up on
                 .retryThrottleMillis(5_000) // optional: specify how fast a message should be retried
                 .build();

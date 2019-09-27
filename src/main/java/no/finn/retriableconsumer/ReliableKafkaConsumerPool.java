@@ -41,6 +41,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
             KafkaClientFactory<K, V> factory,
             Map<String, String> topicsRetryTopics,
             Function<ConsumerRecord<K, V>, Boolean> processingFunction,
+            java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler,
             Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
             long retryThrottleMillis,
             long retryDurationInMillis
@@ -58,6 +59,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                                                 factory::consumer,
                                                 new ArrayList<>(topicsRetryTopics.keySet()),
                                                 processingFunction,
+                                                expiredHandler,
                                                 pollFunction,
                                                 retryHandler,
                                                 retryDurationInMillis))
@@ -69,6 +71,7 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                         factory::consumer,
                         new ArrayList<>(topicsRetryTopics.values()),
                         processingFunction,
+                        expiredHandler,
                         pollFunction,
                         retryHandler,
                         retryDurationInMillis));

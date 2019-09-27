@@ -268,6 +268,11 @@
                 - retry topics now also have itself as retry topic
             </action>
         </release>
+        <release version="1.54">
+            <action dev="morten.segelvik@gmail.com" type="add">
+                - added expired handler as a consumer function.
+            </action>
+        </release>
 
     </body>
 </document>

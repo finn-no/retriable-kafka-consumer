@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.producer.Producer;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -27,6 +28,8 @@ public class ReliablePoolBuilder<K, V> {
     private Long retryThrottleMillis = 5000L;
     private Long retryPeriodMillis = 24 * 60 * 60 * 1000L; // 1 day by default
     private Map<String, String> topicsRetryTopics;
+    private java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler = kvConsumerRecord -> {
+    };
 
     public ReliablePoolBuilder(KafkaClientFactory<K, V> factory) {
         this.factory = factory;
@@ -59,6 +62,12 @@ public class ReliablePoolBuilder<K, V> {
         return this;
     }
 
+
+    public ReliablePoolBuilder<K, V> expiredHandler(java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler) {
+        this.expiredHandler = expiredHandler;
+        return this;
+    }
+
     /**
      * Millis to wait before a failed message is retried - defaults to 5 secounds (5_000 milliseconds)
      *
@@ -87,11 +96,12 @@ public class ReliablePoolBuilder<K, V> {
         verifyNotNull("poolCount", poolCount);
         verifyNotNull("topicsRetryTopics", topicsRetryTopics);
         verifyNotNull("processingFunction", processingFunction);
+        verifyNotNull("expiredHandler", expiredHandler);
         verifyNotNull("retryThrottleMillis", retryThrottleMillis);
         verifyNotNull("retryPeriodMillis", retryPeriodMillis);
         verifyNotNull("factory", factory);
 
-        return new ReliableKafkaConsumerPool<>(poolCount, factory, topicsRetryTopics, processingFunction, pollFunction, retryThrottleMillis, retryPeriodMillis);
+        return new ReliableKafkaConsumerPool<>(poolCount, factory, topicsRetryTopics, processingFunction, expiredHandler, pollFunction, retryThrottleMillis, retryPeriodMillis);
     }
 
     private void verifyNotNull(String fieldName, Object field) {

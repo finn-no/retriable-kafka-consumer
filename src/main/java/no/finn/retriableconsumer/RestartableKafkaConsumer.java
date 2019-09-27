@@ -57,6 +57,7 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
     private final AtomicBoolean running = new AtomicBoolean();
     private final Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction;
     private final Function<ConsumerRecord<K, V>, Boolean> processingFunction;
+    private final java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler;
     private final java.util.function.Consumer<ConsumerRecord<K, V>> retryConsumer;
     private final List<String> topics;
     private final long retryDuration;
@@ -66,13 +67,15 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
     RestartableKafkaConsumer(
             Supplier<Consumer<K, V>> consumerFactory,
             List<String> topics,
-            Function<ConsumerRecord<K, V>, Boolean> processRecord,
+            Function<ConsumerRecord<K, V>, Boolean> processingFunction,
+            java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler,
             Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
             java.util.function.Consumer<ConsumerRecord<K, V>> retryHandler,
             long retryDurationInMillis) {
         this.consumerFactory = consumerFactory;
         this.topics = topics;
-        this.processingFunction = processRecord;
+        this.processingFunction = processingFunction;
+        this.expiredHandler = expiredHandler;
         this.pollFunction = kvConsumer -> {
             try {
                 return pollFunction.apply(kvConsumer);
@@ -105,8 +108,9 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
                         log.info("Reprocess counter is {} for event {}", processCount(kvConsumerRecord.headers()), kvConsumerRecord.value());
                     }
                     if (isExpired(kvConsumerRecord, retryDuration)) {
-                        log.warn("Event was expired and discarded {}.", kvConsumerRecord);
                         EXPIRED_EVENTS_COUNTER.labels(kvConsumerRecord.topic()).inc();
+                        log.warn("Event was expired and discarded {}.", kvConsumerRecord);
+                        expiredHandler.accept(kvConsumerRecord);
                         continue;
                     }
                     try {

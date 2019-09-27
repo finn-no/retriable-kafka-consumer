@@ -98,8 +98,6 @@ public class RestartableKafkaConsumerTest {
 
     @Test
     public void process_until_exception_arises_and_put_on_fail_queue() {
-
-
         AtomicInteger processCount = new AtomicInteger(0);
 
         Function<ConsumerRecord<String, String>, Boolean> processFunction =
@@ -110,10 +108,12 @@ public class RestartableKafkaConsumerTest {
                     return Boolean.TRUE;
                 };
 
+        java.util.function.Consumer<ConsumerRecord<String, String>> expiredHandler = record -> {};
         java.util.function.Consumer<ConsumerRecord<String, String>> failedQueue = mock(java.util.function.Consumer.class);
+
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), failedQueue, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction, expiredHandler, s -> s.poll(10), failedQueue, 100_000_000);
 
         consumer.run();
 
@@ -127,12 +127,8 @@ public class RestartableKafkaConsumerTest {
 
     @Test
     public void put_on_fail_queue_if_process_returns_false() {
-
-
         AtomicInteger processCount = new AtomicInteger(0);
-
         Function<ConsumerRecord<String, String>, Boolean> processFunction = s -> Boolean.FALSE;
-
 
         Producer<String, String> mockProducer = mock(Producer.class);
         Map<String, String> topicsRetryTopic = new HashMap<String, String>() {{
@@ -141,10 +137,10 @@ public class RestartableKafkaConsumerTest {
         }};
         RetryHandler<String, String> failer = new RetryHandler<>(() -> mockProducer, 100, topicsRetryTopic);
 
-
+        java.util.function.Consumer<ConsumerRecord<String, String>> expiredHandler = record -> {};
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(1000), failer, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction, expiredHandler, s -> s.poll(1000), failer, 100_000_000);
 
         consumer.run();
 
@@ -166,9 +162,11 @@ public class RestartableKafkaConsumerTest {
                     throw new RuntimeException("Fail on each processing");
                 };
 
+        java.util.function.Consumer<ConsumerRecord<String, String>> expiredHandler = record -> {};
+
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), failedQueue, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction, expiredHandler, s -> s.poll(10), failedQueue, 100_000_000);
 
         consumer.run();
 
