@@ -8,7 +8,7 @@ public class PoolBuilderTest {
 
     @Test(expected = IllegalStateException.class)
     public void test_some() {
-        new ReliablePoolBuilder<>(null).build();
+        new ReliablePoolBuilder<>(null).expiredHandler(t -> System.out.println("t = " + t)).build();
     }
 
     @Test

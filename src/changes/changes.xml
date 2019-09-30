@@ -272,6 +272,9 @@
             <action dev="morten.segelvik@gmail.com" type="add">
                 - added expired handler as a consumer function.
             </action>
+            <action dev="fmmr@github.com" type="add">
+                - Added loghandler
+            </action>
         </release>
 
     </body>
