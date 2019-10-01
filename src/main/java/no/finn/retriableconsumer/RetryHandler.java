@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
 
+    @SuppressWarnings("WeakerAccess")
     public static String HEADER_KEY_REPROCESS_COUNTER = "reprocess-counter";
 
     private static final Logger log = LoggerFactory.getLogger(RetryHandler.class);
@@ -24,23 +25,30 @@ public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
     private final Supplier<Producer<K, V>> factory;
     private final long retryThrottleMillis;
     private final Map<String, String> topicsRetryTopics;
+    private final LogHandler<K, V> logHandler;
 
-    RetryHandler(Supplier<Producer<K, V>> factory, long retryThrottleMillis, Map<String, String> topicsRetryTopics) {
+    RetryHandler(Supplier<Producer<K, V>> factory,
+                 long retryThrottleMillis,
+                 Map<String, String> topicsRetryTopics,
+                 LogHandler<K, V> logHandler) {
         this.factory = factory;
         this.retryThrottleMillis = retryThrottleMillis;
         this.topicsRetryTopics = topicsRetryTopics;
+        this.logHandler = logHandler;
     }
 
 
     @Override
     public void accept(ConsumerRecord<K, V> record) {
         String retryTopic = topicsRetryTopics.get(record.topic());
-        log.info("Putting message with key [{}] on retry-topic [{}].", record.key(), retryTopic);
-        factory.get().send(createRetryRecord(record, retryTopic, System.currentTimeMillis()));
+        ProducerRecord<K, V> retryRecord = createRetryRecord(record, retryTopic, System.currentTimeMillis());
+        int counter = Integer.parseInt(new String(retryRecord.headers().lastHeader(HEADER_KEY_REPROCESS_COUNTER).value()));
+        logHandler.logRetry(record, counter, retryTopic);
+        factory.get().send(retryRecord);
         try {
             Thread.sleep(retryThrottleMillis);
         } catch (InterruptedException e) {
-            log.error("Interrupted while sleeping");
+            log.error("Interrupted while sleeping", e);
         }
     }
 
@@ -73,7 +81,6 @@ public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
         }
 
         int reprocessCount = Integer.parseInt(new String(processCounterHeader.value()));
-
         return new RecordHeader(HEADER_KEY_REPROCESS_COUNTER, String.valueOf(reprocessCount + 1).getBytes());
     }
 }

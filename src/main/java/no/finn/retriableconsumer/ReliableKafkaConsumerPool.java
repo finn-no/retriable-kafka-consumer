@@ -19,8 +19,8 @@ import static java.util.stream.IntStream.rangeClosed;
  * <p>This class will create a set of consumers that subscribes to a given topic and mechanism to
  * resend records that fails to be processed.
  *
- * @param <K>  - the key-type of the kafka topic
- * @param <V>  - the value-type of the kafka-topic
+ * @param <K> - the key-type of the kafka topic
+ * @param <V> - the value-type of the kafka-topic
  */
 public class ReliableKafkaConsumerPool<K, V> implements Closeable {
 
@@ -28,26 +28,32 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
     public final RestartableMonitor monitor;
 
     /**
-     * @param consumerPoolCount   - number of kafka-consumers
-     * @param factory             - factory that creates consumer and producer
-     * @param processingFunction  - function that will process messages
-     * @param pollFunction        - function to poll messages
+     * @param consumerPoolCount     - number of kafka-consumers
+     * @param factory               - factory that creates consumer and producer
+     * @param topicsRetryTopics     - map of topics and associated retry-topics
+     * @param processingFunction    - function that will process messages
+     * @param pollFunction          - function to poll messages
+     * @param expiredHandler        - hook to handle expired messages
+     * @param logHandler            - How and what to log
+     * @param retryThrottleMillis   - how long we should delay before processing the record again
      * @param retryDurationInMillis - how long retry-producer should retry the message before giving up
-     * @param retryThrottleMillis - how long we should delay before processing the record again
      */
-
     public ReliableKafkaConsumerPool(
             int consumerPoolCount,
             KafkaClientFactory<K, V> factory,
             Map<String, String> topicsRetryTopics,
             Function<ConsumerRecord<K, V>, Boolean> processingFunction,
             Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
+            java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler,
+            LogHandler<K, V> logHandler,
             long retryThrottleMillis,
-            long retryDurationInMillis
-    ) {
+            long retryDurationInMillis) {
 
         // queue for safe communication between consumers and retry-producer
-        RetryHandler<K, V> retryHandler = new RetryHandler<>(factory::producer, retryThrottleMillis, topicsRetryTopics);
+        RetryHandler<K, V> retryHandler = new RetryHandler<>(factory::producer,
+                                                             retryThrottleMillis,
+                                                             topicsRetryTopics,
+                                                             logHandler);
 
         // consumers
         List<Restartable> consumers =
@@ -60,6 +66,8 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                                                 processingFunction,
                                                 pollFunction,
                                                 retryHandler,
+                                                expiredHandler,
+                                                logHandler,
                                                 retryDurationInMillis))
                         .collect(Collectors.toList());
 
@@ -71,6 +79,8 @@ public class ReliableKafkaConsumerPool<K, V> implements Closeable {
                         processingFunction,
                         pollFunction,
                         retryHandler,
+                        expiredHandler,
+                        logHandler,
                         retryDurationInMillis));
 
         // monitor all consumers and producer with the same monitor

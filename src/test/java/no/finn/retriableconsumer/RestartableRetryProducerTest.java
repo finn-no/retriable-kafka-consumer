@@ -20,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("unchecked")
 public class RestartableRetryProducerTest {
 
 /*    @Test
@@ -38,14 +39,15 @@ public class RestartableRetryProducerTest {
         assertThat(retryTopic).isEqualToIgnoringCase("retry-sometopic");
     }*/
 
+    private static final LogHandler<String, String> NULL_LOG_HANDLER = new NullLogHandler();
+
     @Test
     public void create_producer_record_with_correct_headers_for_first_time_failing_Record() {
         Map<String, String> topicsRetryTopics = new HashMap<String, String>() {{
             put("topic", "retry-topic");
         }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
-
+        RetryHandler<String, String> producer = new RetryHandler<>(() -> null, 500, topicsRetryTopics, NULL_LOG_HANDLER);
 
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
@@ -67,7 +69,7 @@ public class RestartableRetryProducerTest {
             put("topic", "retry-topic");
         }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
+        RetryHandler<String, String> producer = new RetryHandler<>(() -> null, 500, topicsRetryTopics, NULL_LOG_HANDLER);
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
         oldRecord.headers().add(new RecordHeader(RetryHandler.HEADER_KEY_REPROCESS_COUNTER, "41".getBytes()));
@@ -93,7 +95,7 @@ public class RestartableRetryProducerTest {
             put("topic", "retry-topic");
         }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
+        RetryHandler<String, String> producer = new RetryHandler<>(() -> null, 500, topicsRetryTopics, NULL_LOG_HANDLER);
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
         ProducerRecord retryRecord = producer.createRetryRecord(oldRecord, "retry-topic", 1000);
@@ -114,7 +116,7 @@ public class RestartableRetryProducerTest {
             put("topic", "retry-topic");
         }};
 
-        RetryHandler<String, String> producer = new RetryHandler<>( ()->null, 500, topicsRetryTopics);
+        RetryHandler<String, String> producer = new RetryHandler<>(() -> null, 500, topicsRetryTopics, NULL_LOG_HANDLER);
 
         ConsumerRecord<String, String> oldRecord = new ConsumerRecord<>("topic", 0, 0, "key", "value");
         ProducerRecord retryRecord = producer.createRetryRecord(oldRecord, "retry-topic", 1000);
@@ -132,7 +134,7 @@ public class RestartableRetryProducerTest {
 
 
     @Test
-    public void send_to_kafka_when_record_available_on_queue() throws Exception {
+    public void send_to_kafka_when_record_available_on_queue() {
 
         Producer<String, String> kafkaProducerMock = mock(Producer.class);
         when(kafkaProducerMock.send(any(ProducerRecord.class))).thenReturn(CompletableFuture.completedFuture("jadda"));
@@ -145,7 +147,7 @@ public class RestartableRetryProducerTest {
             put("foo", "retry-groupid-foo");
         }};
 
-        RetryHandler<String, String> retryProducer =new RetryHandler<>(()->kafkaProducerMock,100, topicsRetryTopics);
+        RetryHandler<String, String> retryProducer = new RetryHandler<>(() -> kafkaProducerMock, 100, topicsRetryTopics, NULL_LOG_HANDLER);
 
         retryProducer.accept(failedRecord);
 

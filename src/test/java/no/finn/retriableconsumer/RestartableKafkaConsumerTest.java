@@ -1,6 +1,7 @@
 package no.finn.retriableconsumer;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings({"deprecation", "ResultOfMethodCallIgnored", "unchecked"})
 public class RestartableKafkaConsumerTest {
     private Consumer<String, String> mockConsumer;
+
+    private static final java.util.function.Consumer<ConsumerRecord<String, String>> EMPTY_EXPIRED_HANDLER = r -> {
+    };
+    private static final LogHandler<String, String> NULL_LOG_HANDLER = new NullLogHandler();
 
     private static final List<String> TOPIC = Arrays.asList("topic", "topic1");
     private List<ConsumerRecord<String, String>> consumerRecords =
@@ -57,49 +63,49 @@ public class RestartableKafkaConsumerTest {
 
     @Test
     public void expired() {
-        Header timestampHeaderOneMinuteAgo = new RecordHeader(RestartableKafkaConsumer.HEADER_TIMESTAMP_KEY, String.valueOf(System.currentTimeMillis() - 60 * 1000).getBytes());
+        Header timestampHeaderOneMinuteAgo = new RecordHeader(RestartableKafkaConsumer.HEADER_TIMESTAMP_KEY,
+                                                              String.valueOf(System.currentTimeMillis() - 60 * 1000).getBytes());
 
         assertThat(RestartableKafkaConsumer.isExpired(new ConsumerRecord<>("", 0, 0, "", ""), 0)).isFalse()
-                .describedAs("Not expired if timestamp header is not present");
+                                                                                                 .describedAs(
+                                                                                                         "Not expired if timestamp header is not present");
 
         assertThat(RestartableKafkaConsumer.isExpired(
                 new ConsumerRecord<>("",
-                        0,
-                        0,
-                        0,
-                        TimestampType.NO_TIMESTAMP_TYPE,
-                        0L,
-                        0,
-                        0,
-                        "",
-                        "",
-                        new RecordHeaders(Arrays.asList(timestampHeaderOneMinuteAgo))),
+                                     0,
+                                     0,
+                                     0,
+                                     TimestampType.NO_TIMESTAMP_TYPE,
+                                     0L,
+                                     0,
+                                     0,
+                                     "",
+                                     "",
+                                     new RecordHeaders(Collections.singletonList(timestampHeaderOneMinuteAgo))),
                 100_000_000))
                 .isFalse()
-                .describedAs("Should not be expired if timestamp header is present and expirytime is not passed");
+                .describedAs("Should not be expired if timestamp header is present and expiry time is not passed");
 
         assertThat(RestartableKafkaConsumer.isExpired(
                 new ConsumerRecord<>("",
-                        0,
-                        0,
-                        0,
-                        TimestampType.NO_TIMESTAMP_TYPE,
-                        0L,
-                        0,
-                        0,
-                        "",
-                        "",
-                        new RecordHeaders(Arrays.asList(timestampHeaderOneMinuteAgo))),
+                                     0,
+                                     0,
+                                     0,
+                                     TimestampType.NO_TIMESTAMP_TYPE,
+                                     0L,
+                                     0,
+                                     0,
+                                     "",
+                                     "",
+                                     new RecordHeaders(Collections.singletonList(timestampHeaderOneMinuteAgo))),
                 0))
                 .isTrue()
-                .describedAs("Should be expired if timestamp header is present and expirytime is passed");
+                .describedAs("Should be expired if timestamp header is present and expiry time is passed");
 
     }
 
     @Test
     public void process_until_exception_arises_and_put_on_fail_queue() {
-
-
         AtomicInteger processCount = new AtomicInteger(0);
 
         Function<ConsumerRecord<String, String>, Boolean> processFunction =
@@ -111,9 +117,13 @@ public class RestartableKafkaConsumerTest {
                 };
 
         java.util.function.Consumer<ConsumerRecord<String, String>> failedQueue = mock(java.util.function.Consumer.class);
+
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), failedQueue, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction,
+                        s -> s.poll(10), failedQueue, EMPTY_EXPIRED_HANDLER, NULL_LOG_HANDLER,
+                        100_000_000
+                );
 
         consumer.run();
 
@@ -127,24 +137,22 @@ public class RestartableKafkaConsumerTest {
 
     @Test
     public void put_on_fail_queue_if_process_returns_false() {
-
-
         AtomicInteger processCount = new AtomicInteger(0);
-
         Function<ConsumerRecord<String, String>, Boolean> processFunction = s -> Boolean.FALSE;
-
 
         Producer<String, String> mockProducer = mock(Producer.class);
         Map<String, String> topicsRetryTopic = new HashMap<String, String>() {{
             put("topic", "retry-topic");
             put("topic1", "retry-topic1");
         }};
-        RetryHandler<String, String> failer = new RetryHandler<>(() -> mockProducer, 100, topicsRetryTopic);
-
+        RetryHandler<String, String> failer = new RetryHandler<>(() -> mockProducer, 100, topicsRetryTopic, NULL_LOG_HANDLER);
 
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(1000), failer, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction,
+                        s -> s.poll(1000), failer, EMPTY_EXPIRED_HANDLER, NULL_LOG_HANDLER,
+                        100_000_000
+                );
 
         consumer.run();
 
@@ -168,7 +176,10 @@ public class RestartableKafkaConsumerTest {
 
         RestartableKafkaConsumer<String, String> consumer =
                 new RestartableKafkaConsumer<>(
-                        () -> mockConsumer, TOPIC, processFunction, s -> s.poll(10), failedQueue, 100_000_000);
+                        () -> mockConsumer, TOPIC, processFunction,
+                        s -> s.poll(10), failedQueue, EMPTY_EXPIRED_HANDLER, NULL_LOG_HANDLER,
+                        100_000_000
+                );
 
         consumer.run();
 

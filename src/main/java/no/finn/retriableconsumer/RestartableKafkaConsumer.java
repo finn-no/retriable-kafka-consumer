@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-
 import io.prometheus.client.Counter;
 import no.finn.retriableconsumer.version.ExposeVersion;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -25,29 +24,30 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
 
     private static final Counter EXPIRED_EVENTS_COUNTER =
             Counter.build()
-                    .namespace(ExposeVersion.getApplicationNameForPrometheus())
-                    .name("expired_events")
-                    .labelNames("topic")
-                    .help("Events expired on retry queue. Must be handled manually")
-                    .register();
+                   .namespace(ExposeVersion.getApplicationNameForPrometheus())
+                   .name("expired_events")
+                   .labelNames("topic")
+                   .help("Events expired on retry queue. Must be handled manually")
+                   .register();
 
     private static final Counter FAILED_EVENTS_COUNTER =
             Counter.build()
-                    .namespace(ExposeVersion.getApplicationNameForPrometheus())
-                    .name("failed_events")
-                    .labelNames("topic")
-                    .help("Events failed.")
-                    .register();
+                   .namespace(ExposeVersion.getApplicationNameForPrometheus())
+                   .name("failed_events")
+                   .labelNames("topic")
+                   .help("Events failed.")
+                   .register();
 
     private static final Counter PROCESSED_SUCCESSFULLY_EVENTS_COUNTER =
             Counter.build()
-                    .namespace(ExposeVersion.getApplicationNameForPrometheus())
-                    .name("processed_successfully_events")
-                    .labelNames("topic")
-                    .help("Events successfully processed.")
-                    .register();
+                   .namespace(ExposeVersion.getApplicationNameForPrometheus())
+                   .name("processed_successfully_events")
+                   .labelNames("topic")
+                   .help("Events successfully processed.")
+                   .register();
 
 
+    @SuppressWarnings("WeakerAccess")
     public static final String HEADER_TIMESTAMP_KEY = "retryable-timestamp-sent";
 
     private static final Logger log = LoggerFactory.getLogger(RestartableKafkaConsumer.class);
@@ -55,9 +55,11 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
 
     private final String consumerName;
     private final AtomicBoolean running = new AtomicBoolean();
+    private final java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler;
+    private final LogHandler<K, V> logHandler;
     private final Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction;
     private final Function<ConsumerRecord<K, V>, Boolean> processingFunction;
-    private final java.util.function.Consumer<ConsumerRecord<K, V>> retryConsumer;
+    private final java.util.function.Consumer<ConsumerRecord<K, V>> retryHandler;
     private final List<String> topics;
     private final long retryDuration;
     private final Supplier<Consumer<K, V>> consumerFactory;
@@ -66,13 +68,17 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
     RestartableKafkaConsumer(
             Supplier<Consumer<K, V>> consumerFactory,
             List<String> topics,
-            Function<ConsumerRecord<K, V>, Boolean> processRecord,
+            Function<ConsumerRecord<K, V>, Boolean> processingFunction,
             Function<Consumer<K, V>, ConsumerRecords<K, V>> pollFunction,
             java.util.function.Consumer<ConsumerRecord<K, V>> retryHandler,
+            java.util.function.Consumer<ConsumerRecord<K, V>> expiredHandler,
+            LogHandler<K, V> logHandler,
             long retryDurationInMillis) {
         this.consumerFactory = consumerFactory;
         this.topics = topics;
-        this.processingFunction = processRecord;
+        this.processingFunction = processingFunction;
+        this.expiredHandler = expiredHandler;
+        this.logHandler = logHandler;
         this.pollFunction = kvConsumer -> {
             try {
                 return pollFunction.apply(kvConsumer);
@@ -81,7 +87,7 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
                 return ConsumerRecords.empty();
             }
         };
-        this.retryConsumer = retryHandler;
+        this.retryHandler = retryHandler;
         this.consumerName = "restartableConsumer-" + consumerCounter.getAndIncrement();
         for (String topic : topics) {
             EXPIRED_EVENTS_COUNTER.labels(topic).inc(0);
@@ -95,39 +101,31 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
         log.info("Started consumer");
         running.set(true);
         try (Consumer<K, V> consumer = consumerFactory.get()) {
-            ensureSubscribtionTo(topics, consumer);
+            ensureSubscriptionTo(topics, consumer);
             while (running.get()) {
 
                 ConsumerRecords<K, V> record = pollFunction.apply(consumer);
                 long start = System.currentTimeMillis();
                 for (ConsumerRecord<K, V> kvConsumerRecord : record) {
-                    if (processCount(kvConsumerRecord.headers()) > 0) {
-                        log.info("Reprocess counter is {} for event {}", processCount(kvConsumerRecord.headers()), kvConsumerRecord.value());
+                    int processCount = processCount(kvConsumerRecord.headers());
+                    if (processCount > 0) {
+                        log.info("Reprocess counter is {} for event {}", processCount, kvConsumerRecord.value());
                     }
                     if (isExpired(kvConsumerRecord, retryDuration)) {
-                        log.warn("Event was expired and discarded {}.", kvConsumerRecord);
                         EXPIRED_EVENTS_COUNTER.labels(kvConsumerRecord.topic()).inc();
+                        logHandler.logExpired(kvConsumerRecord, processCount);
+                        expiredHandler.accept(kvConsumerRecord);
                         continue;
                     }
                     try {
                         if (!processingFunction.apply(kvConsumerRecord)) {
-                            log.error("Processing returned failure, adding to failqueue.");
-                            retryConsumer.accept(kvConsumerRecord);
+                            retryHandler.accept(kvConsumerRecord);
                             FAILED_EVENTS_COUNTER.labels(kvConsumerRecord.topic()).inc();
                         }
                         PROCESSED_SUCCESSFULLY_EVENTS_COUNTER.labels(kvConsumerRecord.topic()).inc();
                     } catch (Exception failure) {
-                        if (kvConsumerRecord.value() != null) {
-                            log.error(
-                                    "Processing threw exception when consuming from topic "
-                                            + kvConsumerRecord.topic()
-                                            + ". Adding message to failqueue: "
-                                            + kvConsumerRecord.value(),
-                                    failure);
-                        } else {
-                            log.error("Processing of null-value threw exception, ", failure);
-                        }
-                        retryConsumer.accept(kvConsumerRecord);
+                        logHandler.logException(kvConsumerRecord, failure);
+                        retryHandler.accept(kvConsumerRecord);
                         FAILED_EVENTS_COUNTER.labels(kvConsumerRecord.topic()).inc();
                     }
                 }
@@ -166,7 +164,6 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
         }
 
         Header timestampHeader = kvConsumerRecord.headers().lastHeader(HEADER_TIMESTAMP_KEY);
-
         String timestampString = new String(timestampHeader.value());
 
         if (!NumberUtils.isDigits(timestampString)) {
@@ -175,11 +172,10 @@ public class RestartableKafkaConsumer<K, V> implements Restartable {
         }
 
         long timestamp = Long.parseLong(timestampString);
-
         return (System.currentTimeMillis() - timestamp) > retryDuration;
     }
 
-    private void ensureSubscribtionTo(List<String> topics, Consumer<K, V> consumer) {
+    private void ensureSubscriptionTo(List<String> topics, Consumer<K, V> consumer) {
         Optional<Boolean> notAssigned = topics.stream().map(s -> isAssignedToTopic(consumer, s)).findAny().filter(p -> !p);
         if (notAssigned.isPresent()) {
             consumer.subscribe(topics);

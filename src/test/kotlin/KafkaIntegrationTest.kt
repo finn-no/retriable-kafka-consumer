@@ -1,4 +1,5 @@
 import no.finn.retriableconsumer.KafkaClientFactory
+import no.finn.retriableconsumer.NullLogHandler
 import no.finn.retriableconsumer.ReliableKafkaConsumerPool
 import no.finn.retriableconsumer.RetryHandler
 import no.finn.retriableconsumer.TestUtil.assertWithinTimespan
@@ -18,11 +19,11 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
 
 
+@Suppress("UNCHECKED_CAST", "DEPRECATION")
 class KafkaIntegrationTest {
-
     @Test
     fun `Dont process records that has timed out`() {
-        val processcounter = AtomicInteger(0)
+        val processCounter = AtomicInteger(0)
 
         val consumer = Mockito.mock(Consumer::class.java) as Consumer<String, String>
         Mockito.`when`(consumer.poll(anyLong())).thenReturn(consumerRecordsWithTimeout()).thenReturn(null)
@@ -36,17 +37,16 @@ class KafkaIntegrationTest {
         }
 
         val process = Function<ConsumerRecord<String, String>, Boolean> {
-            processcounter.incrementAndGet()
+            processCounter.incrementAndGet()
             true
         }
         val pollFunction = Function<Consumer<String, String>, ConsumerRecords<String, String>> { it.poll(1) }
 
-        val pool = ReliableKafkaConsumerPool(3, factory, mapOf("foo" to "retry-foo"), process, pollFunction, 10, 10_000)
+        val pool = ReliableKafkaConsumerPool(3, factory, mapOf("foo" to "retry-foo"), process, pollFunction, java.util.function.Consumer {}, NULL_LOG_HANDLER, 10, 10_000)
 
         pool.monitor.start()
 
-
-        assertWithinTimespan({ assertThat(processcounter.get()).isEqualTo(1) }, 5000L)
+        assertWithinTimespan({ assertThat(processCounter.get()).isEqualTo(1) }, 5000L)
 
         pool.monitor.close()
     }
@@ -54,7 +54,7 @@ class KafkaIntegrationTest {
 
     @Test
     fun `Reprocess failed events`() {
-        val processcounter = AtomicInteger(0)
+        val processCounter = AtomicInteger(0)
 
         val consumer = Mockito.mock(Consumer::class.java) as Consumer<String, String>
         Mockito.`when`(consumer.poll(anyLong()))
@@ -75,16 +75,16 @@ class KafkaIntegrationTest {
         }
 
         val process = Function<ConsumerRecord<String, String>, Boolean> {
-            if (processcounter.incrementAndGet() == 1) throw RuntimeException("BANG!")// fail first time
+            if (processCounter.incrementAndGet() == 1) throw RuntimeException("BANG!")// fail first time
             true
         }
         val poll = Function<Consumer<String, String>, ConsumerRecords<String, String>> { it.poll(1) }
 
-        val pool = ReliableKafkaConsumerPool(3, factory, mapOf("foo" to "retry-foo"), process, poll, 10, 10_000_000)
+        val pool = ReliableKafkaConsumerPool(3, factory, mapOf("foo" to "retry-foo"), process, poll, java.util.function.Consumer {}, NULL_LOG_HANDLER, 10, 10_000_000)
 
         pool.monitor.start()
 
-        assertWithinTimespan({ assertThat(processcounter.get()).isEqualTo(1) }, 5000L)
+        assertWithinTimespan({ assertThat(processCounter.get()).isEqualTo(1) }, 5000L)
         assertWithinTimespan({ verify(producer, times(1)).send(any()) }, 5000L)
 
         pool.monitor.close()
@@ -99,8 +99,14 @@ class KafkaIntegrationTest {
 
         recordWithTimeoutZero.headers().add(RetryHandler.timestampHeader(0))
 
-        mape.put(TopicPartition("foo", 1), ArrayList(listOf(recordWithTimeoutZero, recordWithoutTimeout)))
+        mape[TopicPartition("foo", 1)] = ArrayList(listOf(recordWithTimeoutZero, recordWithoutTimeout))
         return ConsumerRecords(mape)
+    }
+
+
+    companion object {
+
+        private val NULL_LOG_HANDLER = NullLogHandler()
 
     }
 }
