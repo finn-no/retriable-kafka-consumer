@@ -20,11 +20,16 @@ Since this library re-posts your messages to a new topic, the order of the messa
 
 From maven central:
 
+        implementation 'no.finn.retriable-kafka-consumer:retriable-kafka-consumer:1.53'   
+
+or 
+
 	<dependency>
 	  <groupId>no.finn.retriable-kafka-consumer</groupId>
 	  <artifactId>retriable-kafka-consumer</artifactId>
-	  <version>1.52</version>
+	  <version>1.53</version>
 	</dependency>
+
 
 ## Requirements 
 
