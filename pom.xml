@@ -34,6 +34,12 @@
             <organization>Kodemaker</organization>
             <organizationUrl>https://kodemaker.no</organizationUrl>
         </developer>
+        <developer>
+            <email>kenneth.tiller@outlook.com</email>
+            <name>Kenneth Tiller</name>
+            <organization>FINN.no</organization>
+            <organizationUrl>https://finn.no</organizationUrl>
+        </developer>
     </developers>
 
     <scm>
