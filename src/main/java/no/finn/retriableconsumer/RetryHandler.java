@@ -1,10 +1,9 @@
 package no.finn.retriableconsumer;
 
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -44,7 +43,11 @@ public class RetryHandler<K, V> implements Consumer<ConsumerRecord<K, V>> {
         ProducerRecord<K, V> retryRecord = createRetryRecord(record, retryTopic, System.currentTimeMillis());
         int counter = Integer.parseInt(new String(retryRecord.headers().lastHeader(HEADER_KEY_REPROCESS_COUNTER).value()));
         logHandler.logRetry(record, counter, retryTopic);
-        factory.get().send(retryRecord);
+        try {
+            factory.get().send(retryRecord).get();
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Failed waiting for retry message sent confirmation", e);
+        }
         try {
             Thread.sleep(retryThrottleMillis);
         } catch (InterruptedException e) {
