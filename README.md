@@ -121,10 +121,12 @@ These are all in the namespace of the application, the system-property or system
 1. Update pom version to final version, commit and push
 2. Upload to nexus
 	
-  MACOS only:
+MacOs only:
   
 	$ export GPG_TTY=$(tty)     
 	
+All platforms:
+
 	$ mvn clean deploy -Psign  
 	$ mvn nexus-staging:release
 
