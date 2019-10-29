@@ -119,7 +119,7 @@ These are all in the namespace of the application, the system-property or system
 
 ## Release
 1. Update pom version to final version, commit and push
-2. Upload to nexus
+2. Upload to nexus:
 	
 MacOs only:
   
