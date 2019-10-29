@@ -118,9 +118,9 @@ These are all in the namespace of the application, the system-property or system
 * Use java 8 (e.g. 8.0.222-amzn)
 
 ## Release
-1. Update pom version to final version
+1. Update pom version to final version, commit and push
 2. Upload to nexus
-
+     MACOS: $ export GPG_TTY=$(tty)
      $ mvn clean deploy -Psign  
      $ mvn nexus-staging:release
 
