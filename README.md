@@ -122,6 +122,7 @@ These are all in the namespace of the application, the system-property or system
 2. Upload to nexus
 
 	$ export GPG_TTY=$(tty)     --MACOS only
+	
 	$ mvn clean deploy -Psign  
 	$ mvn nexus-staging:release
 
