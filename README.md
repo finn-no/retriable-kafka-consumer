@@ -8,6 +8,8 @@
 If processing of a kafka-record throws an unhandled exception, the record is re-sent to a retry-topic. 
 The record will then be retried until it is successfully processed without exceptions or the `retryPeriod` is exceeded.
 
+This library is suitable for low to medium volume topics where reliability is important. 
+Avoid use cases like high volume log analytics, click stream aggregations, dashboards etc where an occasional lost message is acceptable.
 
 
 # Usage
