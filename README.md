@@ -48,7 +48,8 @@ or
             String groupId();
       }
 
-    
+Please notice that consumer and producer may be called multiple times. `producer()` must return the same producer, but `consumer()` must return a new 
+consumer for every call
 
 ## Minimal example
 
