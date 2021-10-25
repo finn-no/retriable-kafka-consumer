@@ -7,6 +7,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class RestartableMonitor implements Closeable {
   private static final Logger LOGGER = LoggerFactory.getLogger(RestartableMonitor.class);
@@ -43,8 +44,8 @@ public final class RestartableMonitor implements Closeable {
       if (start) {
         LOGGER.info("Starting monitored restartable [{}].", restartable.getName());
       } else {
-        LOGGER.error(
-            "Found non-running restartable {}. Will attempt restart.. ", restartable.getName());
+        LOGGER.warn(
+                "Found non-running restartable {}. Will attempt restart.. ", restartable.getName());
       }
       Thread restartedThread = new Thread(restartable, restartable.getName());
       restartedThread.setDaemon(false);
@@ -56,17 +57,18 @@ public final class RestartableMonitor implements Closeable {
 
   @Override
   public void close() {
+    LOGGER.info("Closing monitor with consumers: {}", consumers.stream().map(Restartable::getName).collect(Collectors.joining(",")));
     consumers.forEach(
-        c -> {
-          try {
-            c.close();
-          } catch (IOException e) {
-            LOGGER.error("Error when closing restartable: ", e);
-          }
-        });
+            c -> {
+              try {
+                c.close();
+              } catch (IOException e) {
+                LOGGER.error("Error when closing restartable: ", e);
+              }
+            });
   }
 
-    public int size() {
-        return consumers.size();
-    }
+  public int size() {
+    return consumers.size();
+  }
 }
