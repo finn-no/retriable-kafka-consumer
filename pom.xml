@@ -5,7 +5,7 @@
     <groupId>no.finn.retriable-kafka-consumer</groupId>
     <artifactId>retriable-kafka-consumer</artifactId>
     <packaging>jar</packaging>
-    <version>1.56-SNAPSHOT</version>
+    <version>1.56</version>
 
     <name>Retriable Kafka Consumer</name>
     <description>Retries processing when consuming records from kafka.</description>
